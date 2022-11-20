@@ -14,7 +14,7 @@ def main():
     print("Server is listening on %s:%d, accepting %d connections..." % (server_ip, server_port, 10))
 
     client, addr = server.accept()
-    print("Client address:" , addr)
+    print("Client address: %s" % addr)
 
     data = b''
     while True:
