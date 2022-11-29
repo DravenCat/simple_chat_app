@@ -16,7 +16,7 @@
     <div id="content"></div>
 
 <script type="text/javascript">
-    var socket = new WebSocket("ws://127.0.0.1:9999/chatsocket");
+    var socket = new WebSocket("ws://127.0.0.1:8000/chatsocket");
     socket.onopen = function () {
         var newTag = document.createElement('div');
         newTag.innerHTML = "【连接成功】";

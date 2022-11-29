@@ -5,6 +5,11 @@ import hashlib
 import threading
 
 
+server_ip = "127.0.0.1"
+server_port = 8000
+max_conn = 10
+
+
 def get_headers(data):
     header_dict = {}
     data = str(data, encoding='utf-8')
@@ -35,25 +40,26 @@ def send_msg(conn, msg_bytes):
     return True
 
 
-class Chat:
-    def __init__(self, ip='0.0.0.0', port=9999):
+class App:
+    def __init__(self, ip='127.0.0.1', port=8000):
         self.addr = (ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.client = {}
+        self.clients = {}
 
     def start(self, ):
-        self.sock.bind((self.addr))
+        self.sock.bind(self.addr)
         self.sock.listen()
-        threading.Thread(target=self.accept, name='accept').start()
+        self.accept_connection()
 
-    def accept(self):
+    def accept_connection(self):
         while True:
-            conn, address = self.sock.accept()
-            self.client[address] = conn
+            client, address = self.sock.accept()
+            self.clients[address] = client
 
-            data = conn.recv(1024)
+            data = client.recv(1024)
             headers = get_headers(data)
+            print(headers)
             response_tpl = "HTTP/1.1 101 Switching Protocols\r\n" \
                            "Upgrade:websocket\r\n" \
                            "Connection: Upgrade\r\n" \
@@ -63,9 +69,9 @@ class Chat:
             value = headers['Sec-WebSocket-Key'] + magic_string
             ac = base64.b64encode(hashlib.sha1(value.encode('utf-8')).digest())
             response_str = response_tpl % (ac.decode('utf-8'), headers['Host'], headers['url'])
-            conn.send(bytes(response_str, encoding='utf-8'))
+            client.send(bytes(response_str, encoding='utf-8'))
 
-            threading.Thread(target=self.recv, name='sock', args=(conn,)).start()
+            threading.Thread(target=self.recv, name='sock', args=(client,)).start()
 
     def recv(self, sock):
         while 1:
@@ -93,14 +99,16 @@ class Chat:
                 chunk = decoded[i] ^ mask[i % 4]
                 bytes_list.append(chunk)
             body = str(bytes_list, encoding='utf-8')
-            for s in self.client.values():
+            for s in self.clients.values():
                 send_msg(s, bytes(body, encoding='utf-8'))
 
     def stop(self):
-        for s in self.client.values():
+        for s in self.clients.values():
             s.close()
         self.sock.close()
 
 
-sc = Chat()
-sc.start()
+if __name__ == '__main__':
+    app = App()
+    app.start()
+
