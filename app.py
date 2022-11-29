@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import *
 from routes.api import api
+from chatServer import ChatServer
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -13,6 +14,6 @@ def hello_world():
 
 
 if __name__ == '__main__':
-    # server = websocket_server(9000)
+    # server = ChatServer(8088)
     # server.start()
     app.run(host='127.0.0.1', port=8000, debug=False)
