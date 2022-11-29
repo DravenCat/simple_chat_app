@@ -1,4 +1,6 @@
 from flask import Blueprint
+from flask import request
+from app import user, online_user
 
 account = Blueprint('account', __name__)
 
@@ -6,15 +8,14 @@ account = Blueprint('account', __name__)
 @account.route("/account/login", methods=['POST'])
 def login():
     try:
-        params = request.values
-        login_name = params['loginName']
-        pwd = params['pwd']
-        md5 = hashlib.md5()
-        md5.update(pwd.encode(encoding='utf-8'))
-        password = md5.hexdigest()
+        params = request.get_json()['content']
+        print(params)
+        username = params['username']
+        password = params['password']
 
-        users = Users.query.filter(Users.loginName == login_name)\
-            .filter(Users.pwd == password).all()
+        if username in online_user:
+
+
         if len(users) == 0:
             return Result.fail('账号不存在或密码错误')
         else:
