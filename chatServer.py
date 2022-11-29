@@ -27,8 +27,11 @@ def get_headers(data):
 
 
 def broadcast(session_id, message):
-    for key in clients.keys():
-        return
+    for value in clients.values():
+        username = value['username']
+        user = users.find_one({'username': username})
+        if session_id in user['session']:
+            value['client'].send('%c%c%s' % (0x81, len(message), message))
 
 
 class ClientThread(threading.Thread):
@@ -42,6 +45,7 @@ class ClientThread(threading.Thread):
         headers = get_headers(data)
         print(headers)
         username = headers['username']
+        clients[self.address]['username'] = username  # bind client socket with username
         token = 'a'
         res_header = "HTTP/1.1 101 Switching Protocols\r\n" \
                      "Upgrade:websocket\r\n" \
@@ -59,6 +63,7 @@ class ClientThread(threading.Thread):
             headers = get_headers(data)
             print(headers)
             session_id = headers['sessionId']
+            broadcast(session_id, data)
 
 
 class ChatServer(threading.Thread):
@@ -74,7 +79,7 @@ class ChatServer(threading.Thread):
         print("Socket server is listening on ", self.addr)
         while True:
             client, address = self.sock.accept()
-            clients[address] = client
+            clients[address] = {'client': client}
             client_thread = ClientThread(client, address)
             client_thread.start()
 
