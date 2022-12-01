@@ -10,19 +10,43 @@
 <body>
     <div id="login">
         <h1>Login</h1>
-        <form method="post">
-            <input type="text" required="required" placeholder="username" name="u"></input>
-            <input type="password" required="required" placeholder="password" name="p"></input>
-            <button class="but" type="submit" onclick="login">Login</button>
-        </form>
+        <div>
+            <input id="username" type="text" placeholder="username" name="u"></input>
+            <input id="password" type="password" placeholder="password" name="p"></input>
+            <button type="button" class="but" onclick="login()">Login</button>
+        </div>
+        
     </div>
 </body>
 
 </html>
 
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
     function login(){
-        let username = 
-        window.location.href="search.html"
+        let httpurl = "";
+        let username = document.getElementById("username");
+        let password = document.getElementById("password");
+        if(username==""||username ==null){
+            alert("username is empty");
+            return;
+        }
+        if(password==""||password==null){
+            alert("password is empty");
+            return;
+        }
+        
+        axios({
+            url:"www.baidu.com",
+            method:"get"
+        }).then(function(response){
+            if(response.status == 200){
+                window.location.href="search.html"
+            }
+            console.log(response.status)
+        }).catch(function (err){
+            console.log(err)
+        });
+        
     }
 </script>
