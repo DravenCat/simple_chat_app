@@ -25,6 +25,19 @@ def get_headers(data):
             header_dict[k] = v.strip()
     return header_dict
 
+def send_msg(conn, msg_bytes):
+    import struct
+    token = b"\x81"
+    length = len(msg_bytes)
+    if length < 126:
+        token += struct.pack("B", length)
+    elif length <= 0xFFFF:
+        token += struct.pack("!BH", 126, length)
+    else:
+        token += struct.pack("!BQ", 127, length)
+    msg = token + msg_bytes
+    conn.send(msg)
+    return True
 
 def broadcast(session_id, message):
     for value in clients.values():
@@ -41,12 +54,13 @@ class ClientThread(threading.Thread):
         self.address = address
 
     def run(self):
+        print("new client joined")
         data = self.client.recv(1024)
         headers = get_headers(data)
         print(headers)
-        username = headers['username']
-        clients[self.address]['username'] = username  # bind client socket with username
-        token = 'a'
+        #username = headers['username']
+        #clients[self.address]['username'] = username  # bind client socket with username
+        token = headers['Sec-WebSocket-Key']
         res_header = "HTTP/1.1 101 Switching Protocols\r\n" \
                      "Upgrade:websocket\r\n" \
                      "Connection: Upgrade\r\n" \
@@ -65,6 +79,34 @@ class ClientThread(threading.Thread):
             session_id = headers['sessionId']
             broadcast(session_id, data)
 
+    def recv(self, sock):
+        while 1:
+            try:
+                info = sock.recv(8096)
+            except Exception as e:
+                info = None
+            if not info:
+                break
+            payload_len = info[1] & 127
+            if payload_len == 126:
+                extend_payload_len = info[2:4]
+                mask = info[4:8]
+                decoded = info[8:]
+            elif payload_len == 127:
+                extend_payload_len = info[2:10]
+                mask = info[10:14]
+                decoded = info[14:]
+            else:
+                extend_payload_len = None
+                mask = info[2:6]
+                decoded = info[6:]
+            bytes_list = bytearray()
+            for i in range(len(decoded)):
+                chunk = decoded[i] ^ mask[i % 4]
+                bytes_list.append(chunk)
+            body = str(bytes_list, encoding='utf-8')
+            for s in self.clients.values():
+                send_msg(s, bytes(body, encoding='utf-8'))
 
 class ChatServer(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=8088):

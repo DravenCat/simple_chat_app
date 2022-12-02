@@ -15,7 +15,7 @@
             <input id="password" type="password" placeholder="password" name="p"></input>
             <button type="button" class="but" onclick="login()">Login</button>
         </div>
-        
+
     </div>
 </body>
 
@@ -23,30 +23,49 @@
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
-    function login(){
+    var socket = new WebSocket("ws://127.0.0.1:8088/");
+    socket.onopen = function() {
+        var newTag = document.createElement('div');
+        newTag.innerHTML = "【连接成功】";
+        document.getElementById('login').appendChild(newTag);
+    };
+    socket.onmessage = function(event) {
+        var response = event.data;
+        var newTag = document.createElement('div');
+        newTag.innerHTML = response;
+        document.getElementById('login').appendChild(newTag);
+        // add here if response == 200: then move to next page
+    };
+    socket.onclose = function(event) {
+        var newTag = document.createElement('div');
+        newTag.innerHTML = "【连接失败】";
+        document.getElementById('login').appendChild(newTag);
+    };
+
+    function login() {
         let httpurl = "";
         let username = document.getElementById("username");
         let password = document.getElementById("password");
-        if(username==""||username ==null){
+        if (username == "" || username == null) {
             alert("username is empty");
             return;
         }
-        if(password==""||password==null){
+        if (password == "" || password == null) {
             alert("password is empty");
             return;
         }
-        
-        axios({
-            url:"www.baidu.com",
-            method:"get"
-        }).then(function(response){
-            if(response.status == 200){
-                window.location.href="search.html"
+        socket.send(username.value + password.value);
+        /*axios({
+            url: "www.baidu.com",
+            method: "get"
+        }).then(function(response) {
+            if (response.status == 200) {
+                socket.close();
+                window.location.href = "search.html"
             }
             console.log(response.status)
-        }).catch(function (err){
+        }).catch(function(err) {
             console.log(err)
-        });
-        
+        });*/
     }
 </script>
