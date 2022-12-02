@@ -23,30 +23,32 @@
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
-    var socket = new WebSocket("ws://127.0.0.1:8088/login");
+    var username;
+    var socket = new WebSocket("ws://127.0.0.1:8088/");
     socket.onopen = function() {
         var newTag = document.createElement('div');
-        newTag.innerHTML = "【连接成功】";
+        newTag.innerHTML = "Connection Established";
         document.getElementById('login').appendChild(newTag);
     };
     socket.onmessage = function(event) {
         var response = event.data;
         if (response == '200') {
-            window.location.href = "chat.html"
+            socket.close();
+            window.location.href = "chat.html/?user=" + username.value + '&key=' + 'abc'
         }
-        /*var newTag = document.createElement('div');
+        var newTag = document.createElement('div');
         newTag.innerHTML = response;
-        document.getElementById('login').appendChild(newTag);*/
+        document.getElementById('login').appendChild(newTag);
     };
     socket.onclose = function(event) {
         var newTag = document.createElement('div');
-        newTag.innerHTML = "【连接失败】";
+        newTag.innerHTML = "Connection Failed";
         document.getElementById('login').appendChild(newTag);
     };
 
     function login() {
         let httpurl = "";
-        let username = document.getElementById("username");
+        username = document.getElementById("username");
         let password = document.getElementById("password");
         if (username == "" || username == null) {
             alert("username is empty");
@@ -56,7 +58,12 @@
             alert("password is empty");
             return;
         }
-        socket.send(username.value + '::::' + password.value);
+        var msg = {
+            type: 'login',
+            username: username.value,
+            password: password.value
+        }
+        socket.send(JSON.stringify(msg));
         /*axios({
             url: "www.baidu.com",
             method: "get"

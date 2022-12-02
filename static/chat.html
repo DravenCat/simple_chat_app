@@ -1,51 +1,70 @@
 <!DOCTYPE html>
 <html>
+
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
 </head>
+
 <body>
     <div>
-        <h3>昵称：<input type="text" id="user"/></h3>
+        <h3>昵称：<input type="text" id="user" /></h3>
         <input type="text" value="说：" id="say" hidden/>
-        <h3>发送消息：</h3><input type="text" id="txt" style="height: 100px;width: 200px"/><br>
-        <input type="button" id="btn" value="提交" style="height: 30px" onclick="sendMsg();"/>
+        <h3>发送消息：</h3><input type="text" id="txt" style="height: 100px;width: 200px" /><br>
+        <input type="button" id="btn" value="提交" style="height: 30px" onclick="sendMsg();" />
         <input type="reset" value="reset" onclick=location="websocket.html">
-        <input type="button" id="close" value="关闭连接" onclick="closeConn();"/>
+        <input type="button" id="close" value="关闭连接" onclick="closeConn();" />
     </div>
     <div id="content"></div>
 
-<script type="text/javascript">
-    var socket = new WebSocket("ws://127.0.0.1:8000/chatsocket");
-    socket.onopen = function () {
-        var newTag = document.createElement('div');
-        newTag.innerHTML = "【连接成功】";
-        document.getElementById('content').appendChild(newTag);
-    };
-    socket.onmessage = function (event) {
-        var response = event.data;
-        var newTag = document.createElement('div');
-        newTag.innerHTML = response;
-        document.getElementById('content').appendChild(newTag);
-    };
-    socket.onclose = function (event) {
-        var newTag = document.createElement('div');
-        newTag.innerHTML = "【连接失败】";
-        document.getElementById('content').appendChild(newTag);
-    };
-    function sendMsg() {
-        var txt = document.getElementById('txt');
-        var user = document.getElementById('user');
-        var say = document.getElementById('say');
-        socket.send(user.value+say.value+txt.value);
-        txt.value = "";
-    }
-    function closeConn() {
-        socket.close();
-        var newTag = document.createElement('div');
-        newTag.innerHTML = "【关闭连接】";
-        document.getElementById('content').appendChild(newTag);
-    }
-</script>
+    <script type="text/javascript">
+        var queryString = new Array();
+        window.onload = function() {
+            if (queryString.length == 0) {
+                if (window.location.search.split('?').length > 1) {
+                    var params = window.location.search.split('?')[1].split('&');
+                    for (var i = 0; i < params.length; i++) {
+                        var key = params[i].split('=')[0];
+                        var value = decodeURIComponent(params[i].split('=')[1]);
+                        queryString[key] = value;
+                    }
+                }
+            }
+        };
+        console.log(queryString);
+        var socket = new WebSocket("ws://127.0.0.1:8000/chatsocket");
+        socket.onopen = function() {
+            var newTag = document.createElement('div');
+            newTag.innerHTML = "【连接成功】";
+            document.getElementById('content').appendChild(newTag);
+        };
+        socket.onmessage = function(event) {
+            var response = event.data;
+            var newTag = document.createElement('div');
+            newTag.innerHTML = response;
+            document.getElementById('content').appendChild(newTag);
+        };
+        socket.onclose = function(event) {
+            var newTag = document.createElement('div');
+            newTag.innerHTML = "【连接失败】";
+            document.getElementById('content').appendChild(newTag);
+        };
+
+        function sendMsg() {
+            var txt = document.getElementById('txt');
+            var user = document.getElementById('user');
+            var say = document.getElementById('say');
+            socket.send(user.value + say.value + txt.value);
+            txt.value = "";
+        }
+
+        function closeConn() {
+            socket.close();
+            var newTag = document.createElement('div');
+            newTag.innerHTML = "【关闭连接】";
+            document.getElementById('content').appendChild(newTag);
+        }
+    </script>
 </body>
+
 </html>

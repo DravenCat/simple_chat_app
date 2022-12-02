@@ -4,6 +4,7 @@ import socket
 import base64
 import hashlib
 import threading
+import json
 
 server_ip = "127.0.0.1"
 server_port = 8000
@@ -58,9 +59,6 @@ class ClientThread(threading.Thread):
         data = self.client.recv(1024)
         headers = get_headers(data)
         print(headers)
-        #username = headers['username']
-        #clients[self.address]['username'] = username  # bind client socket with username
-        token = headers['Sec-WebSocket-Key']
         response_tpl = "HTTP/1.1 101 Switching Protocols\r\n" \
                      "Upgrade:websocket\r\n" \
                      "Connection: Upgrade\r\n" \
@@ -76,7 +74,6 @@ class ClientThread(threading.Thread):
         while 1:
             try:
                 info = self.client.recv(8096)
-                print('info:', info)
             except Exception as e:
                 info = None
             if not info:
@@ -99,10 +96,13 @@ class ClientThread(threading.Thread):
                 chunk = decoded[i] ^ mask[i % 4]
                 bytes_list.append(chunk)
             body = str(bytes_list, encoding='utf-8')
-            split = body.split('::::')
-            print(split)
-            if (split[0] == 'alice' and split[1] == 'abc'):
-                send_msg(self.client, bytes('200', encoding='utf-8'))
+            body = json.loads(body)
+            print(body)
+            if body['type'] == 'login':
+                if (body['username'] == 'alice' and body['password'] == 'abc'):
+                    send_msg(self.client, bytes('200', encoding='utf-8'))
+                else: 
+                    send_msg(self.client, bytes('wrong credentials', encoding='utf-8'))
             """try:
                 data = self.client.recv(1024)
             except socket.error:
@@ -115,34 +115,6 @@ class ClientThread(threading.Thread):
             session_id = headers['sessionId']
             broadcast(session_id, data)"""
 
-    def recv(self, sock):
-        while 1:
-            try:
-                info = sock.recv(8096)
-            except Exception as e:
-                info = None
-            if not info:
-                break
-            payload_len = info[1] & 127
-            if payload_len == 126:
-                extend_payload_len = info[2:4]
-                mask = info[4:8]
-                decoded = info[8:]
-            elif payload_len == 127:
-                extend_payload_len = info[2:10]
-                mask = info[10:14]
-                decoded = info[14:]
-            else:
-                extend_payload_len = None
-                mask = info[2:6]
-                decoded = info[6:]
-            bytes_list = bytearray()
-            for i in range(len(decoded)):
-                chunk = decoded[i] ^ mask[i % 4]
-                bytes_list.append(chunk)
-            body = str(bytes_list, encoding='utf-8')
-            for s in self.clients.values():
-                send_msg(s, bytes(body, encoding='utf-8'))
 
 class ChatServer(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=8088):
