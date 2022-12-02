@@ -99,10 +99,9 @@ class ClientThread(threading.Thread):
             body = json.loads(body)
             print(body)
             if body['type'] == 'login':
-                if (body['username'] == 'alice' and body['password'] == 'abc'):
-                    send_msg(self.client, bytes('200', encoding='utf-8'))
-                else: 
-                    send_msg(self.client, bytes('wrong credentials', encoding='utf-8'))
+                self.process_login(body)
+            if body['type'] == 'POST':
+                self.process_post(body)
             """try:
                 data = self.client.recv(1024)
             except socket.error:
@@ -114,7 +113,15 @@ class ClientThread(threading.Thread):
             print(headers)
             session_id = headers['sessionId']
             broadcast(session_id, data)"""
+    
+    def process_login(self, body):
+        if (body['username'] == 'alice' and body['password'] == 'abc'):
+            send_msg(self.client, bytes('200', encoding='utf-8'))
+        else: 
+            send_msg(self.client, bytes('Wrong credentials', encoding='utf-8'))
 
+    def process_post(self, body):
+        return None
 
 class ChatServer(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=8088):

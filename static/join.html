@@ -1,18 +1,34 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>Join</title>
-        <link rel="stylesheet" type="text/css" href="join.css" />
-    </head>
-    <div id="join">
-        <input type="text" id="sessionId" placeholder="sessionId"></input>
-        <button class="but" onclick="join()">Join in</button>
-    </div>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Join</title>
+    <link rel="stylesheet" type="text/css" href="join.css" />
+</head>
+<div id="join">
+    <input type="text" id="sessionId" placeholder="sessionId"></input>
+    <button class="but" onclick="join()">Join in</button>
+</div>
+
 </html>
 
 <script>
-    function join(){
-        window.location="chat.html"
+    var queryString = new Array();
+    window.onload = function() {
+        if (queryString.length == 0) {
+            if (window.location.search.split('?').length > 1) {
+                var params = window.location.search.split('?')[1].split('&');
+                for (var i = 0; i < params.length; i++) {
+                    var key = params[i].split('=')[0];
+                    var value = decodeURIComponent(params[i].split('=')[1]);
+                    queryString[key] = value;
+                }
+            }
+        }
+    };
+
+    function join() {
+        window.location = "chat.html"
     }
 </script>

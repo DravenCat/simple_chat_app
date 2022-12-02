@@ -35,16 +35,17 @@ users = mongo['user']
         time: datatime
     }
 }
-    '''
+'''
 chat_sessions = mongo['chatSession']
 
 
 @api.route("/account/login", methods=['POST'])
 def login():
     req_body = request.json
+    print(req_body)
     username = req_body['username']
     password = req_body['password']
-
+    print('u&p:', username, password)
     if username is None:
         return json.dumps({'message': "Missing username"}), 400
     elif password is None:
@@ -66,12 +67,15 @@ def login():
             return res, 200
 
 
-@api.route("/account/register", methods=["POST"])
+@api.route("/account/register/", methods=["GET"])
 def register():
-    req_body = request.json
-    username = req_body['username']
-    password = req_body['password']
-
+    print(request)
+    print('req_args:', request.args)
+    print('req_values:', request.values)
+    req_body = request.args
+    username = req_body['user']
+    password = req_body['pass']
+    print('abc:', username, password)
     if username is None:
         return json.dumps({'message': "Missing username"}), 400
     elif password is None:
@@ -81,7 +85,7 @@ def register():
     else:
         user = users.find_one({"username": username})
         if user:
-            json.dumps({'message': "Username already exists"}), 400
+            return json.dumps({'message': "Username already exists"}), 400
         else:
             users.insert_one({'username': username, 'password': password, 'session': []})
             res = jsonify({
