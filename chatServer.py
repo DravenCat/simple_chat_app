@@ -61,12 +61,17 @@ class ClientThread(threading.Thread):
         #username = headers['username']
         #clients[self.address]['username'] = username  # bind client socket with username
         token = headers['Sec-WebSocket-Key']
-        res_header = "HTTP/1.1 101 Switching Protocols\r\n" \
+        response_tpl = "HTTP/1.1 101 Switching Protocols\r\n" \
                      "Upgrade:websocket\r\n" \
                      "Connection: Upgrade\r\n" \
-                     "Sec-WebSocket-Accept: %s\r\n" % token
-        #
-        self.client.send(bytes(res_header, encoding='utf-8'))
+                     "Sec-WebSocket-Accept: %s\r\n" \
+                     "WebSocket-Location: ws://%s%s\r\n\r\n"
+        magic_string = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
+        value = headers['Sec-WebSocket-Key'] + magic_string
+        ac = base64.b64encode(hashlib.sha1(value.encode('utf-8')).digest())
+        response_str = response_tpl % (ac.decode('utf-8'), headers['Host'], headers['url'])
+        self.client.send(bytes(response_str, encoding='utf-8'))
+        print('sent1')
         while 1:
             try:
                 data = self.client.recv(1024)

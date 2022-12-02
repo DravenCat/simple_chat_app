@@ -23,7 +23,7 @@
 
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
-    var socket = new WebSocket("ws://127.0.0.1:8088/");
+    var socket = new WebSocket("ws://127.0.0.1:8088/login");
     socket.onopen = function() {
         var newTag = document.createElement('div');
         newTag.innerHTML = "【连接成功】";
