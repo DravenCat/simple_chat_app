@@ -70,19 +70,50 @@ class ClientThread(threading.Thread):
         value = headers['Sec-WebSocket-Key'] + magic_string
         ac = base64.b64encode(hashlib.sha1(value.encode('utf-8')).digest())
         response_str = response_tpl % (ac.decode('utf-8'), headers['Host'], headers['url'])
-        self.client.send(bytes(response_str, encoding='utf-8'))
+        self.client.send(bytes(response_str, encoding='utf-8')) # build connection
         print('sent1')
+        # start listening
         while 1:
             try:
+                info = self.client.recv(8096)
+                print('info:', info)
+            except Exception as e:
+                info = None
+            if not info:
+                break
+            payload_len = info[1] & 127
+            if payload_len == 126:
+                extend_payload_len = info[2:4]
+                mask = info[4:8]
+                decoded = info[8:]
+            elif payload_len == 127:
+                extend_payload_len = info[2:10]
+                mask = info[10:14]
+                decoded = info[14:]
+            else:
+                extend_payload_len = None
+                mask = info[2:6]
+                decoded = info[6:]
+            bytes_list = bytearray()
+            for i in range(len(decoded)):
+                chunk = decoded[i] ^ mask[i % 4]
+                bytes_list.append(chunk)
+            body = str(bytes_list, encoding='utf-8')
+            split = body.split('::::')
+            print(split)
+            if (split[0] == 'alice' and split[1] == 'abc'):
+                send_msg(self.client, bytes('200', encoding='utf-8'))
+            """try:
                 data = self.client.recv(1024)
             except socket.error:
                 clients.pop(self.address)
                 online_user.remove(username)
                 break
+            print('abcd', data)
             headers = get_headers(data)
             print(headers)
             session_id = headers['sessionId']
-            broadcast(session_id, data)
+            broadcast(session_id, data)"""
 
     def recv(self, sock):
         while 1:
