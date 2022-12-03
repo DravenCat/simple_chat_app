@@ -39,13 +39,12 @@ users = mongo['user']
 chat_sessions = mongo['chatSession']
 
 
-@api.route("/account/login", methods=['POST'])
+@api.route("/account/login/", methods=['GET'])
 def login():
-    req_body = request.json
-    print(req_body)
-    username = req_body['username']
-    password = req_body['password']
-    print('u&p:', username, password)
+    req_body = request.args
+    username = req_body['user']
+    password = req_body['pass']
+    print('u&p', username, password)
     if username is None:
         return json.dumps({'message': "Missing username"}), 400
     elif password is None:
@@ -69,13 +68,13 @@ def login():
 
 @api.route("/account/register/", methods=["GET"])
 def register():
-    print(request)
+    '''print(request)
     print('req_args:', request.args)
-    print('req_values:', request.values)
+    print('req_values:', request.values)'''
     req_body = request.args
     username = req_body['user']
     password = req_body['pass']
-    print('abc:', username, password)
+    #print('abc:', username, password)
     if username is None:
         return json.dumps({'message': "Missing username"}), 400
     elif password is None:
@@ -94,7 +93,7 @@ def register():
             return res, 200
 
 
-@api.route("/account/logout", methods=["POST"])
+@api.route("/account/logout/", methods=["POST"])
 def logout():
     req_body = request.json
     username = req_body['username']
@@ -111,10 +110,12 @@ def logout():
         return res, 200
 
 
-@api.route("/session/join", methods=["POST"])
+@api.route("/session/join/", methods=["GET"])
 def join():
-    req_body = request.json
-    usernames = req_body['username']
+    req_body = request.args
+    username = req_body['user']
+    password = req_body['pass']
+    print('abc:', username, password)
     session = {
                 'id': str(uuid.uuid4()),
                 'members': [],
@@ -134,7 +135,7 @@ def join():
     return res, 200
 
 
-@api.route("/session", methods=["GET"])
+@api.route("/session/", methods=["GET"])
 def history():
     session_id = request.args.get('sessionId')
     session = chat_sessions.find_one({'id': session_id})

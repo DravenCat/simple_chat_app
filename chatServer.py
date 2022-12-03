@@ -96,12 +96,8 @@ class ClientThread(threading.Thread):
                 chunk = decoded[i] ^ mask[i % 4]
                 bytes_list.append(chunk)
             body = str(bytes_list, encoding='utf-8')
-            body = json.loads(body)
-            print(body)
-            if body['type'] == 'login':
-                self.process_login(body)
-            if body['type'] == 'POST':
-                self.process_post(body)
+            for s in clients.values():
+                send_msg(s, bytes(body, encoding='utf-8'))
             """try:
                 data = self.client.recv(1024)
             except socket.error:
