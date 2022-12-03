@@ -31,37 +31,11 @@
                 }
             }
         };
-
-        /*
-    var username;
-    var socket = new WebSocket("ws://127.0.0.1:8088/");
-    socket.onopen = function() {
-        var newTag = document.createElement('div');
-        newTag.innerHTML = "Connection Established";
-        document.getElementById('login').appendChild(newTag);
-    };
-    socket.onmessage = function(event) {
-        var response = event.data;
-        if (response == '200') {
-            socket.close();
-            window.location.href = "chat.html/?user=" + username.value + '&key=' + 'abc'
-        }
-        var newTag = document.createElement('div');
-        newTag.innerHTML = response;
-        document.getElementById('login').appendChild(newTag);
-    };
-    socket.onclose = function(event) {
-        var newTag = document.createElement('div');
-        newTag.innerHTML = "Connection Failed";
-        document.getElementById('login').appendChild(newTag);
-    };
-    */
-
         console.log(query);
         var socket = new WebSocket("ws://127.0.0.1:8088");
         socket.onopen = function() {
             var newTag = document.createElement('div');
-            newTag.innerHTML = "【连接成功】";
+            newTag.innerHTML = "Connection Established";
             document.getElementById('content').appendChild(newTag);
         };
         socket.onmessage = function(event) {
@@ -72,15 +46,20 @@
         };
         socket.onclose = function(event) {
             var newTag = document.createElement('div');
-            newTag.innerHTML = "【连接失败】";
+            newTag.innerHTML = "Connection Failed";
             document.getElementById('content').appendChild(newTag);
         };
 
         function sendMsg() {
-            var txt = document.getElementById('txt');
             var user = document.getElementById('user');
             var say = document.getElementById('say');
-            socket.send(user.value + say.value + txt.value);
+            var txt = document.getElementById('txt');
+            var msg = {
+                sessionId: query['sessionId'],
+                user: user.value,
+                message: txt.value
+            }
+            socket.send(JSON.stringify(msg));
             txt.value = "";
         }
 

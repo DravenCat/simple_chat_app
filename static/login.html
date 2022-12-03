@@ -43,7 +43,7 @@
             }
         }).then(function(response) {
             if (response.status == 200) {
-                window.location.href = "join.html?user=" + username.value + '&key=' + 'abc'
+                window.location.href = "join.html?user=" + username.value + '&key=' + 'abc' //这个key可以让api生成然后发过来？变成user unique key？作为身份验证
             } else {
                 var res = response.data; //我对前端不太熟悉 这里的error message 我怎么都搞不出来
                 console.log(response.data)
@@ -55,12 +55,6 @@
         }).catch(function(err) {
             console.log(err)
         });
-        /*var msg = {
-            type: 'login',
-            username: username.value,
-            password: password.value
-        }
-        socket.send(JSON.stringify(msg));*/
     }
 
     function register() {
