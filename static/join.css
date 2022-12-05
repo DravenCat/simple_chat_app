@@ -39,7 +39,7 @@ input {
   font-size: 15px;
   line-height: normal;
   border-radius: 5px;
-  margin: 0;
+  margin-bottom: 5px;
 }
 
 #join {

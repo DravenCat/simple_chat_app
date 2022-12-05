@@ -3,23 +3,24 @@
 
 <head lang="en">
     <meta charset="UTF-8">
-    <title></title>
+    <title>Chat</title>
+    <link rel="stylesheet" type="text/css" href="chat.css" />
 </head>
 
 <body>
-    <div>
+    <div class="main">
         <h3>Nickname: <input type="text" id="user" /></h3>
-        <input type="text" value="说：" id="say" hidden/>
-        <h3>Message: </h3><input type="text" id="txt" style="height: 100px;width: 200px" /><br>
-        <input type="button" id="btn" value="提交" style="height: 30px" onclick="sendMsg();" />
-        <input type="reset" value="reset" onclick=location="websocket.html">
-        <input type="button" id="close" value="关闭连接" onclick="closeConn();" />
+        <input type="text" value="说：" id="say" hidden />
+        <h3>Message: </h3><input type="text" id="txt" class="txt" /><br>
+        <input type="button" id="btn" class="btn" value="send" onclick="sendMsg();" />
+        <input type="reset" id="reset" class="reset" value="reset" onclick=location="websocket.html">
+        <input type="button" id="close" class="close" value="disconnect" onclick="closeConn();" />
     </div>
-    <div id="content"></div>
+    <div id="content" class="content"></div>
 
     <script type="text/javascript">
         var query = new Array();
-        window.onload = function() {
+        window.onload = function () {
             if (query.length == 0) {
                 if (window.location.search.split('?').length > 1) {
                     var params = window.location.search.split('?')[1].split('&');
@@ -33,7 +34,7 @@
         };
         console.log(query);
         var socket = new WebSocket("ws://127.0.0.1:8088");
-        socket.onopen = function() {
+        socket.onopen = function () {
             var newTag = document.createElement('div');
             newTag.innerHTML = "Connection Established";
             document.getElementById('content').appendChild(newTag);
@@ -44,13 +45,13 @@
                 _id: query['user']
             }));
         };
-        socket.onmessage = function(event) {
+        socket.onmessage = function (event) {
             var response = event.data;
             var newTag = document.createElement('div');
             newTag.innerHTML = response;
             document.getElementById('content').appendChild(newTag);
         };
-        socket.onclose = function(event) {
+        socket.onclose = function (event) {
             var newTag = document.createElement('div');
             newTag.innerHTML = "Connection Failed";
             document.getElementById('content').appendChild(newTag);
