@@ -10,9 +10,9 @@ import pymongo
 server_ip = "127.0.0.1"
 server_port = 8000
 max_conn = 10
-global_clients = {"clients": [], "addresses": []}
+global_clients = {"clients": [], "addresses": [], "_id": []}
 
-client = pymongo.MongoClient("localhost", 27017) # use this to connect to mongodb
+'''client = pymongo.MongoClient("localhost", 27017) # use this to connect to mongodb
 mongo = client["chatApp"]
 # test database connectivity
 try:
@@ -21,7 +21,8 @@ except Exception:
     print("Unable to connect to mongodb")
 users = mongo['user']
 chat_sessions = mongo['chatSession']
-
+for s in chat_sessions.find():
+    print('chat session printed from server:', s)'''
 
 def get_headers(data):
     header_dict = {}
@@ -57,26 +58,16 @@ def broadcast(session_id, user, message):
         for client in global_clients['clients']:
             send_msg(client, bytes(user+': '+message, encoding='utf-8'))
     else:
-        broadcast_in_session(session_id, message) # this part not done
+        broadcast_in_session(session_id, user, message)
         
-def broadcast_in_session(session_id, user, message): # this function not done
-    for value in global_clients.values():
-        print(value)
-        username = value['username']
-        user = users.find_one({'username': username})
-
-"""class SessionInfo():
-    def __init__(self, sessionId):
-        self.sessionId = sessionId
-        self.clients = {"clients": [], "addresses": []}
-
-    def add_client(self, client, address):
-        self.clients['clients'].append(client)
-        self.clients['addresses'].append(address)
-    
-    def remove_client(self, client, address):
-        self.clients['clients'].remove(client)
-        self.clients['addresses'].remove(address)"""
+def broadcast_in_session(session_id, user, message):
+    session = chat_sessions.find_one({'id': session_id})
+    print('sess:', session)
+    for member in session['members']:
+        print('memb', member)
+        for i in range(len(global_clients['_id'])):
+            if member == global_clients['_id'][i]:
+                send_msg(global_clients['clients'][i], bytes(user+': '+message, encoding='utf-8'))
 
 class ClientThread(threading.Thread):
     def __init__(self, client, address):
@@ -85,7 +76,7 @@ class ClientThread(threading.Thread):
         self.address = address
 
     def run(self):
-        print("new client joined")
+        print("new client joined the socket")
         data = self.client.recv(1024)
         headers = get_headers(data)
         print(headers)
@@ -100,6 +91,16 @@ class ClientThread(threading.Thread):
         response_str = response_tpl % (ac.decode('utf-8'), headers['Host'], headers['url'])
         self.client.send(bytes(response_str, encoding='utf-8')) # build connection
         print('glob clients:', global_clients)
+        # get user id know who the client is
+        try:
+            info = self.client.recv(8096)
+        except Exception as e:
+            info = None
+        body = self.process_body(info)        
+        body = json.loads(body)
+        print('client is', body)
+        clientId = body['_id']
+        global_clients['_id'].append(clientId)
         # start listening
         while 1:
             try:
@@ -108,36 +109,37 @@ class ClientThread(threading.Thread):
                 info = None
             if not info:
                 break
-            payload_len = info[1] & 127
-            if payload_len == 126:
-                extend_payload_len = info[2:4]
-                mask = info[4:8]
-                decoded = info[8:]
-            elif payload_len == 127:
-                extend_payload_len = info[2:10]
-                mask = info[10:14]
-                decoded = info[14:]
-            else:
-                extend_payload_len = None
-                mask = info[2:6]
-                decoded = info[6:]
-            bytes_list = bytearray()
-            for i in range(len(decoded)):
-                chunk = decoded[i] ^ mask[i % 4]
-                bytes_list.append(chunk)
-            body = str(bytes_list, encoding='utf-8')
+            body = self.process_body(info)
+            print(body)
+            if body == "": #网页端已经断开连接了，因为网页端发不了空白
+                print('breaking')
+                global_clients['clients'].remove(self.client)
+                global_clients['addresses'].remove(self.address)
+                global_clients['_id'].remove(clientId)
+                break
             body = json.loads(body)
             print(body)
             broadcast(body['sessionId'], body['user'], body['message'])
     
-    def process_login(self, body):
-        if (body['username'] == 'alice' and body['password'] == 'abc'):
-            send_msg(self.client, bytes('200', encoding='utf-8'))
-        else: 
-            send_msg(self.client, bytes('Wrong credentials', encoding='utf-8'))
-
-    def process_post(self, body):
-        return None
+    def process_body(self, info):
+        payload_len = info[1] & 127
+        if payload_len == 126:
+            extend_payload_len = info[2:4]
+            mask = info[4:8]
+            decoded = info[8:]
+        elif payload_len == 127:
+            extend_payload_len = info[2:10]
+            mask = info[10:14]
+            decoded = info[14:]
+        else:
+            extend_payload_len = None
+            mask = info[2:6]
+            decoded = info[6:]
+        bytes_list = bytearray()
+        for i in range(len(decoded)):
+            chunk = decoded[i] ^ mask[i % 4]
+            bytes_list.append(chunk)
+        return str(bytes_list, encoding='utf-8')
 
 class ChatServer(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=8088):

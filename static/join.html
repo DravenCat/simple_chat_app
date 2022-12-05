@@ -14,6 +14,7 @@
 
 </html>
 
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
     var query = new Array();
     window.onload = function() {
@@ -40,11 +41,11 @@
         axios.get(httpurl, {
             params: {
                 user: query['user'],
-                pass: query['key']
+                sessionId: sessionId.value
             }
         }).then(function(response) {
             if (response.status == 200) {
-                window.location.href = "chat.html?user=" + query['user'] + '&key=' + query['key'] + '&sessionId=' + sessionId;
+                window.location.href = "chat.html?user=" + query['user'] + '&sessionId=' + sessionId.value;
             } else {
                 var res = response.data;
                 console.log(res)
@@ -60,7 +61,7 @@
 
     function join_global() {
         console.log(query['user'])
-        window.location.href = "chat.html?user=" + query['user'] + '&key=' + query['key'] + '&sessionId=global';
+        window.location.href = "chat.html?user=" + query['user'] + '&sessionId=global';
         return false;
     };
 </script>

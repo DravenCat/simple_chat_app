@@ -8,9 +8,9 @@
 
 <body>
     <div>
-        <h3>昵称：<input type="text" id="user" /></h3>
+        <h3>Nickname: <input type="text" id="user" /></h3>
         <input type="text" value="说：" id="say" hidden/>
-        <h3>发送消息：</h3><input type="text" id="txt" style="height: 100px;width: 200px" /><br>
+        <h3>Message: </h3><input type="text" id="txt" style="height: 100px;width: 200px" /><br>
         <input type="button" id="btn" value="提交" style="height: 30px" onclick="sendMsg();" />
         <input type="reset" value="reset" onclick=location="websocket.html">
         <input type="button" id="close" value="关闭连接" onclick="closeConn();" />
@@ -25,7 +25,7 @@
                     var params = window.location.search.split('?')[1].split('&');
                     for (var i = 0; i < params.length; i++) {
                         var key = params[i].split('=')[0];
-                        var value = decodeURIComponent(params[i].split('=')[1]);
+                        var value = params[i].split('=')[1];
                         query[key] = value;
                     }
                 }
@@ -37,6 +37,12 @@
             var newTag = document.createElement('div');
             newTag.innerHTML = "Connection Established";
             document.getElementById('content').appendChild(newTag);
+            while (query['user'] == null) {
+                var i = 1
+            }
+            socket.send(JSON.stringify({
+                _id: query['user']
+            }));
         };
         socket.onmessage = function(event) {
             var response = event.data;
@@ -54,6 +60,10 @@
             var user = document.getElementById('user');
             var say = document.getElementById('say');
             var txt = document.getElementById('txt');
+            if (txt.value == "") {
+                alert("message cannot be blank");
+                return;
+            }
             var msg = {
                 sessionId: query['sessionId'],
                 user: user.value,

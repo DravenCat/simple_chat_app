@@ -43,15 +43,15 @@
             }
         }).then(function(response) {
             if (response.status == 200) {
-                window.location.href = "join.html?user=" + username.value + '&key=' + 'abc' //这个key可以让api生成然后发过来？变成user unique key？作为身份验证
+                console.log(response.data);
+                window.location.href = "join.html?user=" + response.data['_id']
             } else {
-                var res = response.data; //我对前端不太熟悉 这里的error message 我怎么都搞不出来
+                var res = response.data['message']; //这里的response message不知道为什么提取不出来。。底下也有同样的问题
                 console.log(response.data)
                 var newTag = document.createElement('div');
                 newTag.innerHTML = res;
                 document.getElementById('login').appendChild(newTag);
             }
-            //console.log(response.status)
         }).catch(function(err) {
             console.log(err)
         });
@@ -76,15 +76,14 @@
             }
         }).then(response => {
             if (response.status == 200) {
-                window.location.href = "join.html/?user=" + username.value + '&key=' + 'abc'
+                window.location.href = "join.html?user=" + response.data['_id']
             } else {
-                var res = response.data; // 这里也是
+                var res = response.data;
                 console.log(res)
                 var newTag = document.createElement('div');
                 newTag.innerHTML = res;
                 document.getElementById('login').appendChild(newTag);
             }
-            //console.log(response)
         }).catch(function(err) {
             console.log(err)
         });

@@ -2,6 +2,7 @@ from flask import Blueprint
 from flask import jsonify, request
 import json
 import pymongo
+from bson.objectid import ObjectId
 import uuid
 
 api = Blueprint('api', __name__)
@@ -9,7 +10,7 @@ api = Blueprint('api', __name__)
 online_user = []
 
 client = pymongo.MongoClient("localhost", 27017)
-mongo = client["chatApp"]
+db = client["chatApp"]
 # test database connectivity
 try:
     print(client.server_info())
@@ -22,8 +23,9 @@ except Exception:
     session: List of session id
 }
 '''
-users = mongo['user']
-
+users = db['user']
+for u in users.find():
+    print('users:', u)
 '''
 {
     id: String
@@ -36,8 +38,9 @@ users = mongo['user']
     }
 }
 '''
-chat_sessions = mongo['chatSession']
-
+chat_sessions = db['chatSession']
+for s in chat_sessions.find():
+    print('chat session:', s)
 
 @api.route("/account/login/", methods=['GET'])
 def login():
@@ -46,22 +49,22 @@ def login():
     password = req_body['pass']
     print('u&p', username, password)
     if username is None:
-        return json.dumps({'message': "Missing username"}), 400
+        return jsonify({'message': "Missing username"}), 400
     elif password is None:
-        return json.dumps({'message': "Missing password"}), 400
+        return jsonify({'message': "Missing password"}), 400
     elif username in online_user:
-        return json.dumps({'message': "user already logged in"}), 400
+        return jsonify({'message': "user already logged in"}), 400
     else:
         user = users.find_one({"username": username})
         if user is None:
-            return json.dumps({'message': "User does not exist"}), 404
+            return jsonify({'message': "User does not exist"}), 404
         elif user['password'] != password:
-            return json.dumps({'message': "Password incorrect"}), 400
+            return jsonify({'message': "Password incorrect"}), 400
         else:
             online_user.append(user['username'])
             res = jsonify({
                 'username': user['username'],
-                'session': user['session']
+                '_id': str(user['_id'])
             })
             return res, 200
 
@@ -76,19 +79,20 @@ def register():
     password = req_body['pass']
     #print('abc:', username, password)
     if username is None:
-        return json.dumps({'message': "Missing username"}), 400
+        return jsonify({'message': "Missing username"}), 400
     elif password is None:
-        return json.dumps({'message': "Missing password"}), 400
+        return jsonify({'message': "Missing password"}), 400
     elif username in online_user:
-        return json.dumps({'message': "Username already exists"}), 400
+        return jsonify({'message': "Username already exists"}), 400
     else:
         user = users.find_one({"username": username})
         if user:
-            return json.dumps({'message': "Username already exists"}), 400
+            return jsonify({'message': "Username already exists"}), 400
         else:
-            users.insert_one({'username': username, 'password': password, 'session': []})
+            id = users.insert_one({'username': username, 'password': password, 'session': []}).inserted_id
             res = jsonify({
-                'message': 'success'
+                'username': username,
+                '_id': str(id)
             })
             return res, 200
 
@@ -113,38 +117,25 @@ def logout():
 @api.route("/session/join/", methods=["GET"])
 def join():
     req_body = request.args
-    username = req_body['user']
-    password = req_body['pass']
-    print('abc:', username, password)
-    session = {
-                'id': str(uuid.uuid4()),
-                'members': [],
-                'history': []
-              }
-    for username in usernames:
-        user = users.find_one({'username': username})
-        if user:
-            session['members'].append(user['username'])
-            user['session'].append(session['id'])
-            users.update_one({'username': user['username']}, {'$set': {'session': user['session']}})
-
-    chat_sessions.insert_one(session)
-    res = jsonify({
-        'message': 'success'
-    })
-    return res, 200
-
-
-@api.route("/session/", methods=["GET"])
-def history():
-    session_id = request.args.get('sessionId')
-    session = chat_sessions.find_one({'id': session_id})
-    if session is None:
-        return json.dumps({'message': "Session does not exist"}), 400
-
-    res = jsonify({
-        'sessionId': session_id,
-        'members': session['members'],
-        'history': session['history']
-    })
-    return res, 200
+    uId = req_body['user']
+    sessionId = req_body['sessionId']
+    print("uidsession:", uId,sessionId)
+    # first verify the user
+    user = users.find_one({'_id': ObjectId(uId)})
+    if not user:
+        print('User credentials incorrect, please log in again')
+        return jsonify({'message': "User credentials incorrect"}), 400
+    session = chat_sessions.find_one({'id': sessionId})
+    if session: # session already exists
+        new = {"$set": {'members': list(session['members'])+[uId]}}
+        chat_sessions.update_one({'members': session['members']}, new)
+        print(chat_sessions.find_one({'id': sessionId}))
+        return jsonify({'message': 'success'}), 200
+    else: 
+        session = {
+            'id': sessionId,
+            'members': [uId],
+            'history': []
+        }
+        chat_sessions.insert_one(session)
+        return jsonify({'message': 'success'}), 200
