@@ -11,7 +11,7 @@ server_ip = "127.0.0.1"
 server_port = 8000
 max_conn = 10
 global_clients = {"clients": [], "addresses": [], "_id": []}
-
+print('chatsession::::::', chat_sessions)
 '''client = pymongo.MongoClient("localhost", 27017) # use this to connect to mongodb
 mongo = client["chatApp"]
 # test database connectivity
@@ -62,7 +62,7 @@ def broadcast(session_id, user, message):
         
 def broadcast_in_session(session_id, user, message):
     session = chat_sessions.find_one({'id': session_id})
-    print('sess:', session)
+    print('sesssssssssss:', session)
     for member in session['members']:
         print('memb', member)
         for i in range(len(global_clients['_id'])):

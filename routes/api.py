@@ -99,7 +99,8 @@ def register():
 
 @api.route("/account/logout/", methods=["POST"])
 def logout():
-    req_body = request.json
+    req_body = request.args
+    print("aaaaaaaaaaaaaaā", req_body)
     username = req_body['username']
 
     if username is None:

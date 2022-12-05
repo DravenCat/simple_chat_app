@@ -15,7 +15,7 @@
         <input type="button" id="btn" class="btn" value="send" onclick="sendMsg();" />
         <input type="reset" id="reset" class="reset" value="reset" onclick=location="websocket.html">
         <input type="button" id="close" class="close" value="disconnect" onclick="closeConn();" />
-        <input type="button" class="logout" value="logout" onclick="logout()"/>
+        <input type="button" class="logout" value="logout" onclick="logout()" />
     </div>
     <div id="content" class="content"></div>
 </body>
@@ -25,7 +25,7 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script type="text/javascript">
     var query = new Array();
-    window.onload = function () {
+    window.onload = function() {
         if (query.length == 0) {
             if (window.location.search.split('?').length > 1) {
                 var params = window.location.search.split('?')[1].split('&');
@@ -39,7 +39,7 @@
     };
     console.log(query);
     var socket = new WebSocket("ws://127.0.0.1:8088");
-    socket.onopen = function () {
+    socket.onopen = function() {
         var newTag = document.createElement('div');
         newTag.innerHTML = "Connection Established";
         document.getElementById('content').appendChild(newTag);
@@ -50,13 +50,13 @@
             _id: query['user']
         }));
     };
-    socket.onmessage = function (event) {
+    socket.onmessage = function(event) {
         var response = event.data;
         var newTag = document.createElement('div');
         newTag.innerHTML = response;
         document.getElementById('content').appendChild(newTag);
     };
-    socket.onclose = function (event) {
+    socket.onclose = function(event) {
         var newTag = document.createElement('div');
         newTag.innerHTML = "Connection Failed";
         document.getElementById('content').appendChild(newTag);
@@ -86,9 +86,9 @@
         document.getElementById('content').appendChild(newTag);
     }
 
-    function logout(){
-        user = localStorage.getItem(query['user'])
-        httpurl = "http://127.0.0.1:8000/api/account/logout"
+    function logout() {
+        let user = localStorage.getItem(query['user'])
+        let httpurl = "http://127.0.0.1:8000/api/account/logout"
         axios.post(httpurl, {
             username: user
         }).then(function(response) {
@@ -96,7 +96,8 @@
                 window.location.href = "login.html"
             }
         }).catch(function(err) {
-            alert(err.response['data']['message']) 
+            //alert(err.response['data']['message'])
+            console.log(err)
         });
-}
+    }
 </script>
