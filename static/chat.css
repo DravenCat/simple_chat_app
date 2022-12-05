@@ -61,6 +61,21 @@ html{
     margin-bottom: 5px;   
 }
 
+.logout{
+    width: 70px;   
+    /* text-align: center; */
+    min-height: 20px;   
+    /* display: block;    */
+    background-color: #4a77d4;   
+    border: 1px solid #3762bc;   
+    color: #fff;   
+    padding: 9px 14px;   
+    font-size: 15px;   
+    line-height: normal;   
+    border-radius: 5px;   
+    margin-bottom: 5px; 
+}
+
 .main{
     margin-left: 100px;
 }

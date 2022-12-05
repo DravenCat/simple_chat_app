@@ -44,16 +44,11 @@
         }).then(function(response) {
             if (response.status == 200) {
                 console.log(response.data);
+                localStorage.setItem(response.data['_id'],username.value)
                 window.location.href = "join.html?user=" + response.data['_id']
-            } else {
-                var res = response.data['message']; //这里的response message不知道为什么提取不出来。。底下也有同样的问题
-                console.log(response.data)
-                var newTag = document.createElement('div');
-                newTag.innerHTML = res;
-                document.getElementById('login').appendChild(newTag);
             }
         }).catch(function(err) {
-            console.log(err)
+            alert(err.response['data']['message'])
         });
     }
 
@@ -77,15 +72,9 @@
         }).then(response => {
             if (response.status == 200) {
                 window.location.href = "join.html?user=" + response.data['_id']
-            } else {
-                var res = response.data;
-                console.log(res)
-                var newTag = document.createElement('div');
-                newTag.innerHTML = res;
-                document.getElementById('login').appendChild(newTag);
             }
         }).catch(function(err) {
-            console.log(err)
+            alert(err.response['data']['message'])
         });
     }
 </script>
