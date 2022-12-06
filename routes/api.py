@@ -1,5 +1,6 @@
 from flask import Blueprint
 from flask import jsonify, request
+#from chatServer import global_clients
 import json
 import pymongo
 from bson.objectid import ObjectId

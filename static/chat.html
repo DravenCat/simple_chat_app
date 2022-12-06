@@ -47,7 +47,8 @@
             var i = 1
         }
         socket.send(JSON.stringify({
-            _id: query['user']
+            _id: query['user'],
+            //sessionId: query['sessionId']
         }));
     };
     socket.onmessage = function(event) {
@@ -80,9 +81,15 @@
     }
 
     function closeConn() {
-        socket.close();
+        var msg = {
+            sessionId: query['sessionId'],
+            user: query['user'],
+            message: "__closeConn__"
+        }
+        socket.send(JSON.stringify(msg));
+        //socket.close();
         var newTag = document.createElement('div');
-        newTag.innerHTML = "【关闭连接】";
+        newTag.innerHTML = "Closing connection";
         document.getElementById('content').appendChild(newTag);
     }
 

@@ -11,6 +11,7 @@ server_ip = "127.0.0.1"
 server_port = 8000
 max_conn = 10
 global_clients = {"clients": [], "addresses": [], "_id": []}
+in_global = {"clients": [], "addresses": [], "_id": []}
 print('chatsession::::::', chat_sessions)
 '''client = pymongo.MongoClient("localhost", 27017) # use this to connect to mongodb
 mongo = client["chatApp"]
@@ -55,8 +56,13 @@ def send_msg(conn, msg_bytes):
 def broadcast(session_id, user, message):
     print('clients:', global_clients)
     if session_id == 'global':
-        for client in global_clients['clients']:
-            send_msg(client, bytes(user+': '+message, encoding='utf-8'))
+        for i in range(len(global_clients)):
+            ind = 0
+            for session in chat_sessions.find():
+                if global_clients['_id'][i] in session['members']:
+                    ind = 1
+            if ind == 0:
+                send_msg(global_clients['clients'][i], bytes(user+': '+message, encoding='utf-8'))
     else:
         broadcast_in_session(session_id, user, message)
         
@@ -109,16 +115,28 @@ class ClientThread(threading.Thread):
                 info = None
             if not info:
                 break
-            body = self.process_body(info)
+            print('info:', info)
+            body_str = self.process_body(info)
+            print(body_str)
+            body = json.loads(body_str)
             print(body)
-            if body == "": #网页端已经断开连接了，因为网页端发不了空白
-                print('breaking')
+            if "__closeConn__" == body['message'] or body_str == "": #网页端已经断开连接了，因为网页端发不了空白
+                print('breaking:', body)
                 global_clients['clients'].remove(self.client)
                 global_clients['addresses'].remove(self.address)
                 global_clients['_id'].remove(clientId)
+                session = chat_sessions.find_one({'id': body['sessionId']})
+                if session: # session already exists
+                    print(session)
+                    v = []
+                    for mem in list(session['members']):
+                        print(mem)
+                        if mem != body['user']:
+                            v.append(mem)
+                    new = {"$set": {'members': v}}
+                    print('newwwwwww:', new)
+                    chat_sessions.update_one({'members': session['members']}, new)
                 break
-            body = json.loads(body)
-            print(body)
             broadcast(body['sessionId'], body['user'], body['message'])
     
     def process_body(self, info):
