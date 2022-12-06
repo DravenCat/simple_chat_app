@@ -69,12 +69,15 @@ def broadcast_in_session(session_id, user, message):
                 send_msg(global_clients['clients'][i], bytes(user+': '+message, encoding='utf-8'))
 
 class ClientThread(threading.Thread):
+    '''a client thread, can have multiple threads for multiple clients (each client has one thread)'''
     def __init__(self, client, address):
+        '''init a client thread object'''
         super(ClientThread, self).__init__()
         self.client = client
         self.address = address
 
     def run(self):
+        '''run the client thread and accept incoming messages, also redirect them to the right sessions'''
         print("new client joined the socket")
         data = self.client.recv(1024)
         headers = get_headers(data)
@@ -133,6 +136,7 @@ class ClientThread(threading.Thread):
             broadcast(body['sessionId'], body['user'], body['message'])
     
     def process_body(self, info):
+        '''process the byte incoming messages and decode them into readable messages'''
         payload_len = info[1] & 127
         if payload_len == 126:
             extend_payload_len = info[2:4]
@@ -157,13 +161,16 @@ class ClientThread(threading.Thread):
         return result
 
 class ChatServer(threading.Thread):
+    '''the chat server that we run in the backend'''
     def __init__(self, ip='127.0.0.1', port=8088):
+        '''init a chatserver object'''
         super(ChatServer, self).__init__()
         self.addr = (ip, port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     def run(self):
+        '''run the chat server and maintain list of clients'''
         self.sock.bind(self.addr)
         self.sock.listen()
         print("Socket server is listening on ", self.addr)
@@ -176,6 +183,7 @@ class ChatServer(threading.Thread):
             client_thread.start()
 
     def stop(self):
+        '''stop the server'''
         for s in global_clients.values():
             s.close()
         self.sock.close()
