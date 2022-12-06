@@ -13,19 +13,9 @@ max_conn = 10
 global_clients = {"clients": [], "addresses": [], "_id": []}
 in_global = {"clients": [], "addresses": [], "_id": []}
 print('chatsession::::::', chat_sessions)
-'''client = pymongo.MongoClient("localhost", 27017) # use this to connect to mongodb
-mongo = client["chatApp"]
-# test database connectivity
-try:
-    print(client.server_info())
-except Exception:
-    print("Unable to connect to mongodb")
-users = mongo['user']
-chat_sessions = mongo['chatSession']
-for s in chat_sessions.find():
-    print('chat session printed from server:', s)'''
 
 def get_headers(data):
+    '''process the header for client connection and convert it into readable json'''
     header_dict = {}
     data = str(data, encoding='utf-8')
     header, body = data.split('\r\n\r\n', 1)
@@ -40,6 +30,7 @@ def get_headers(data):
     return header_dict
 
 def send_msg(conn, msg_bytes):
+    '''take in string msg and send message bytes through conn'''
     import struct
     token = b"\x81"
     length = len(msg_bytes)
@@ -54,9 +45,10 @@ def send_msg(conn, msg_bytes):
     return True
 
 def broadcast(session_id, user, message):
+    '''broadcast the message to the right group of people based on their session id'''
     print('clients:', global_clients)
     if session_id == 'global':
-        for i in range(len(global_clients)):
+        for i in range(len(global_clients['clients'])):
             ind = 0
             for session in chat_sessions.find():
                 if global_clients['_id'][i] in session['members']:
@@ -67,6 +59,7 @@ def broadcast(session_id, user, message):
         broadcast_in_session(session_id, user, message)
         
 def broadcast_in_session(session_id, user, message):
+    '''the broadcast function for in session communication'''
     session = chat_sessions.find_one({'id': session_id})
     print('sesssssssssss:', session)
     for member in session['members']:
@@ -157,7 +150,11 @@ class ClientThread(threading.Thread):
         for i in range(len(decoded)):
             chunk = decoded[i] ^ mask[i % 4]
             bytes_list.append(chunk)
-        return str(bytes_list, encoding='utf-8')
+        msg = str(bytes_list, encoding='utf-8')
+        result = ""
+        for i in range(len(msg)):
+            result = result + chr(ord(msg[i]) - 5);
+        return result
 
 class ChatServer(threading.Thread):
     def __init__(self, ip='127.0.0.1', port=8088):
