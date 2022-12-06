@@ -29,7 +29,6 @@ input {
 }
 .but {
   width: 300px;
-  /* text-align: center; */
   min-height: 20px;
   display: block;
   background-color: #4a77d4;
