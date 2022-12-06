@@ -45,6 +45,7 @@ for s in chat_sessions.find():
 
 @api.route("/account/login/", methods=['GET'])
 def login():
+    '''process login requests'''
     req_body = request.args
     username = req_body['user']
     password = req_body['pass']
@@ -72,9 +73,7 @@ def login():
 
 @api.route("/account/register/", methods=["GET"])
 def register():
-    '''print(request)
-    print('req_args:', request.args)
-    print('req_values:', request.values)'''
+    '''process register requests'''
     req_body = request.args
     username = req_body['user']
     password = req_body['pass']
@@ -100,6 +99,7 @@ def register():
 
 @api.route("/account/logout/", methods=["POST"])
 def logout():
+    '''process logout requests'''
     req_body = request.args
     print("aaaaaaaaaaaaaaā", req_body)
     username = req_body['username']
@@ -118,6 +118,7 @@ def logout():
 
 @api.route("/session/join/", methods=["GET"])
 def join():
+    '''process join requests for session'''
     req_body = request.args
     uId = req_body['user']
     sessionId = req_body['sessionId']
